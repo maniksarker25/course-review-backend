@@ -11,10 +11,7 @@ const createTagValidationSchema = z.object({
 
 // create validation schema for details------
 const createDetailsValidationSchema = z.object({
-  level: z.string({
-    invalid_type_error: 'Level must be a string',
-    required_error: 'Level is required',
-  }),
+  level: z.enum(['Beginner', 'Intermediate', 'Advanced']),
   description: z.string({
     invalid_type_error: 'Description must be a string',
     required_error: 'Description is required',

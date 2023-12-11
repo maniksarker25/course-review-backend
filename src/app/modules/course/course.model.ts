@@ -16,6 +16,10 @@ const detailsSchema = new Schema<TDetails>({
   level: {
     type: String,
     required: true,
+    enum: {
+      values: ['Beginner', 'Intermediate', 'Advanced'],
+      message: '{VALUE} is not valid data',
+    },
   },
   description: {
     type: String,
@@ -68,6 +72,19 @@ const courseSchema = new Schema<TCourse>({
   details: {
     type: detailsSchema,
   },
+});
+
+courseSchema.pre('save', async function (next) {
+  const existingCourse = this;
+  const startDate = new Date(existingCourse?.startDate);
+  const endDate = new Date(existingCourse?.endDate);
+  if (isNaN(startDate) || isNaN(endDate)) {
+    throw new Error('Invalid date format in date');
+  }
+  const durationInMillisecond = endDate - startDate;
+  const durationInWeeks = durationInMillisecond / (7 * 24 * 60 * 60 * 1000);
+  this.durationInWeeks = Math.ceil(durationInWeeks);
+  next();
 });
 
 export const Course = model<TCourse>('Course', courseSchema);

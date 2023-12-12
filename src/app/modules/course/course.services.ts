@@ -14,7 +14,7 @@ const createCourseIntoDB = async (payload: TCourse) => {
 // get all courses from db --------------
 const getAllCoursesFromDB = async (query: Record<string, unknown>) => {
   // paginate all course ---
-  let limit = 1;
+  let limit = 10;
   let page = 1;
   let skip = 0;
   if (query.limit) {
@@ -27,9 +27,35 @@ const getAllCoursesFromDB = async (query: Record<string, unknown>) => {
 
   const paginateQuery = Course.find().skip(skip);
 
-  const limitQuery = await paginateQuery.limit(limit);
+  const limitQuery = paginateQuery.limit(limit);
 
-  return limitQuery;
+  // sorting ------------
+  const sortOrder = query?.sortOrder || 'desc';
+  // const sortFields =
+  //   (query?.sortBy as string)?.split(',')?.join(' ') || '-title';
+
+  const sortBy = (query?.sortBy as string)?.split(',') || ['__v'];
+  console.log(sortBy);
+  const sortOptions: Record<string, number> = {};
+  if (sortBy.length > 1) {
+    const sortByFields = sortBy?.map((field) => field.trim());
+    sortByFields.forEach((field) => {
+      sortOptions[field] = sortOrder === 'desc' ? -1 : 1;
+    });
+  }
+  sortOptions[sortBy[0]] = sortOrder === 'desc' ? -1 : 1;
+
+  console.log(sortOptions);
+
+  const sortQuery = limitQuery.sort(sortOptions);
+
+  // filter by minPrice and MaxPrice
+  const minPrice = query?.minPrice || 0;
+  const maxPrice = query?.maxPrice || Infinity;
+  const priceFilterQuery = await sortQuery.find({
+    price: { $gte: minPrice, $lte: maxPrice },
+  });
+  return priceFilterQuery;
 };
 
 export const courseServices = {

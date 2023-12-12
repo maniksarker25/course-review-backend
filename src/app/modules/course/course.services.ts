@@ -97,7 +97,71 @@ const getAllCoursesFromDB = async (query: Record<string, unknown>) => {
   return { data: limitQuery, meta: { page, limit, total: totalData } };
 };
 
+const updateCourseIntoDB = async (id: string, payload: Partial<TCourse>) => {
+  try {
+    const { tags, details, ...remainingData } = payload;
+    const modifiedTagsAndRemainingData: Record<string, unknown> = {
+      ...remainingData,
+    };
+    // for details---------------
+    if (details && Object.keys(details).length) {
+      for (const [key, value] of Object.entries(details)) {
+        modifiedTagsAndRemainingData[`details.${key}`] = value;
+      }
+    }
+    // update details and remaining data----------
+    const updateDetailsAndRemainingData = await Course.findByIdAndUpdate(
+      id,
+      modifiedTagsAndRemainingData,
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
+    if (!updateDetailsAndRemainingData) {
+      throw new Error('Failed to update course');
+    }
+    // update tags data ------
+    if (tags && tags?.length > 0) {
+      const deletedTags = tags
+        ?.filter((tag) => tag.name && tag.isDeleted)
+        .map((el) => el.name);
+      const deleteTags = await Course.findByIdAndUpdate(
+        id,
+        {
+          $pull: { tags: { name: { $in: deletedTags } } },
+        },
+        { new: true, runValidators: true },
+      );
+      if (!deleteTags) {
+        throw new Error('Failed to update course');
+      }
+
+      const newTags = tags.filter((tag) => tag.name && !tag.isDeleted);
+      const addNewTags = await Course.findByIdAndUpdate(
+        id,
+        {
+          $addToSet: {
+            tags: { $each: newTags },
+          },
+        },
+        { new: true, runValidators: true },
+      );
+      if (!addNewTags) {
+        throw new Error('Failed to update course');
+      }
+    }
+    const result = await Course.findById(id);
+    return result;
+  } catch (error) {
+    throw new Error('Failed to update course');
+  }
+
+  // update details data ------------
+};
+
 export const courseServices = {
   createCourseIntoDB,
   getAllCoursesFromDB,
+  updateCourseIntoDB,
 };

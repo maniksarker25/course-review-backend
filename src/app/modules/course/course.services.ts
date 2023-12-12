@@ -1,3 +1,5 @@
+import httpStatus from 'http-status';
+import AppError from '../../error/appError';
 import { Category } from '../category/category.model';
 import { TCourse } from './course.interface';
 import { Course } from './course.model';
@@ -5,7 +7,10 @@ import { Course } from './course.model';
 const createCourseIntoDB = async (payload: TCourse) => {
   const isExistsCategory = await Category.findById(payload.categoryId);
   if (!isExistsCategory) {
-    throw new Error(`Category id ${payload.categoryId} is not exists`);
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      `Category id ${payload.categoryId} is not exists`,
+    );
   }
   const result = await Course.create(payload);
   return result;
@@ -98,64 +103,60 @@ const getAllCoursesFromDB = async (query: Record<string, unknown>) => {
 };
 
 const updateCourseIntoDB = async (id: string, payload: Partial<TCourse>) => {
-  try {
-    const { tags, details, ...remainingData } = payload;
-    const modifiedTagsAndRemainingData: Record<string, unknown> = {
-      ...remainingData,
-    };
-    // for details---------------
-    if (details && Object.keys(details).length) {
-      for (const [key, value] of Object.entries(details)) {
-        modifiedTagsAndRemainingData[`details.${key}`] = value;
-      }
+  const { tags, details, ...remainingData } = payload;
+  const modifiedTagsAndRemainingData: Record<string, unknown> = {
+    ...remainingData,
+  };
+  // for details---------------
+  if (details && Object.keys(details).length) {
+    for (const [key, value] of Object.entries(details)) {
+      modifiedTagsAndRemainingData[`details.${key}`] = value;
     }
-    // update details and remaining data----------
-    const updateDetailsAndRemainingData = await Course.findByIdAndUpdate(
-      id,
-      modifiedTagsAndRemainingData,
-      {
-        new: true,
-        runValidators: true,
-      },
-    );
-    if (!updateDetailsAndRemainingData) {
-      throw new Error('Failed to update course');
-    }
-    // update tags data ------
-    if (tags && tags?.length > 0) {
-      const deletedTags = tags
-        ?.filter((tag) => tag.name && tag.isDeleted)
-        .map((el) => el.name);
-      const deleteTags = await Course.findByIdAndUpdate(
-        id,
-        {
-          $pull: { tags: { name: { $in: deletedTags } } },
-        },
-        { new: true, runValidators: true },
-      );
-      if (!deleteTags) {
-        throw new Error('Failed to update course');
-      }
-
-      const newTags = tags.filter((tag) => tag.name && !tag.isDeleted);
-      const addNewTags = await Course.findByIdAndUpdate(
-        id,
-        {
-          $addToSet: {
-            tags: { $each: newTags },
-          },
-        },
-        { new: true, runValidators: true },
-      );
-      if (!addNewTags) {
-        throw new Error('Failed to update course');
-      }
-    }
-    const result = await Course.findById(id);
-    return result;
-  } catch (error) {
+  }
+  // update details and remaining data----------
+  const updateDetailsAndRemainingData = await Course.findByIdAndUpdate(
+    id,
+    modifiedTagsAndRemainingData,
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+  if (!updateDetailsAndRemainingData) {
     throw new Error('Failed to update course');
   }
+  // update tags data ------
+  if (tags && tags?.length > 0) {
+    const deletedTags = tags
+      ?.filter((tag) => tag.name && tag.isDeleted)
+      .map((el) => el.name);
+    const deleteTags = await Course.findByIdAndUpdate(
+      id,
+      {
+        $pull: { tags: { name: { $in: deletedTags } } },
+      },
+      { new: true, runValidators: true },
+    );
+    if (!deleteTags) {
+      throw new Error('Failed to update course');
+    }
+
+    const newTags = tags.filter((tag) => tag.name && !tag.isDeleted);
+    const addNewTags = await Course.findByIdAndUpdate(
+      id,
+      {
+        $addToSet: {
+          tags: { $each: newTags },
+        },
+      },
+      { new: true, runValidators: true },
+    );
+    if (!addNewTags) {
+      throw new Error('Failed to update course');
+    }
+  }
+  const result = await Course.findById(id);
+  return result;
 
   // update details data ------------
 };

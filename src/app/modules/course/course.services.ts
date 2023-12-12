@@ -27,23 +27,22 @@ const getAllCoursesFromDB = async (query: Record<string, unknown>) => {
 
   const paginateQuery = Course.find().skip(skip);
 
-  // sorting ------------
-  const sortOrder = query?.sortOrder || 'desc';
-
-  const sortBy = (query?.sortBy as string)?.split(',') || ['__v'];
-  // console.log(sortBy);
-  const sortOptions: Record<string, number> = {};
-  if (sortBy.length > 1) {
-    const sortByFields = sortBy?.map((field) => field.trim());
-    sortByFields.forEach((field) => {
-      sortOptions[field] = sortOrder === 'desc' ? -1 : 1;
-    });
-  }
-  sortOptions[sortBy[0]] = sortOrder === 'desc' ? -1 : 1;
-
-  // console.log(sortOptions);
-
+  // sorting -------------------------------
   if (query?.sortBy || query?.sortOrder) {
+    const sortOrder = query?.sortOrder || 'desc';
+
+    const sortBy = (query?.sortBy as string)?.split(',') || ['__v'];
+    // console.log(sortBy);
+    const sortOptions: Record<string, number> = {};
+    if (sortBy.length > 1) {
+      const sortByFields = sortBy?.map((field) => field.trim());
+      sortByFields.forEach((field) => {
+        sortOptions[field] = sortOrder === 'desc' ? -1 : 1;
+      });
+    }
+    sortOptions[sortBy[0]] = sortOrder === 'desc' ? -1 : 1;
+
+    // console.log(sortOptions);
     paginateQuery.sort(sortOptions);
   }
 
@@ -93,8 +92,9 @@ const getAllCoursesFromDB = async (query: Record<string, unknown>) => {
     paginateQuery.find({ 'details.level': level });
   }
   const limitQuery = await paginateQuery.limit(limit);
+  const totalData = await Course.countDocuments();
 
-  return limitQuery;
+  return { data: limitQuery, meta: { page, limit, total: totalData } };
 };
 
 export const courseServices = {

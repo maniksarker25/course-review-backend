@@ -56,6 +56,73 @@ const createCourseValidationSchema = z.object({
   details: createDetailsValidationSchema,
 });
 
+// update validation schema for tag------
+const updateTagValidationSchema = z.object({
+  name: z
+    .string({
+      invalid_type_error: 'Tag name must be a string',
+    })
+    .optional(),
+  isDeleted: z.boolean().optional().default(false),
+});
+
+// update validation schema for details------
+const updateDetailsValidationSchema = z.object({
+  level: z.enum(['Beginner', 'Intermediate', 'Advanced']),
+  description: z
+    .string({
+      invalid_type_error: 'Description must be a string',
+    })
+    .optional(),
+});
+// update validation schema for course
+const updateCourseValidationSchema = z.object({
+  title: z
+    .string({
+      invalid_type_error: 'Title must be a string',
+    })
+    .optional(),
+  instructor: z
+    .string({
+      invalid_type_error: 'Instructor must be a string',
+    })
+    .optional(),
+  categoryId: z
+    .string({
+      invalid_type_error: 'Category id must be a string',
+    })
+    .optional(),
+  price: z
+    .number({
+      invalid_type_error: 'Price must be a number',
+    })
+    .optional(),
+  tags: z.array(updateTagValidationSchema).optional(),
+  startDate: z
+    .string({
+      invalid_type_error: 'Start date must be a string',
+    })
+    .optional(),
+  endDate: z
+    .string({
+      invalid_type_error: 'End date must be a string',
+    })
+    .optional(),
+  language: z
+    .string({
+      invalid_type_error: 'Language must be a string',
+    })
+    .optional(),
+  provider: z
+    .string({
+      invalid_type_error: 'Provider must be a string',
+    })
+    .optional(),
+  durationInWeeks: z.number().optional(),
+  details: updateDetailsValidationSchema.optional(),
+});
+
 export const courseValidations = {
   createCourseValidationSchema,
+  updateCourseValidationSchema,
 };

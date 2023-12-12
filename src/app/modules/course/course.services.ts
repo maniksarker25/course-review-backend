@@ -3,6 +3,7 @@ import AppError from '../../error/appError';
 import { Category } from '../category/category.model';
 import { TCourse } from './course.interface';
 import { Course } from './course.model';
+import { Review } from '../review/review.model';
 
 const createCourseIntoDB = async (payload: TCourse) => {
   const isExistsCategory = await Category.findById(payload.categoryId);
@@ -157,12 +158,19 @@ const updateCourseIntoDB = async (id: string, payload: Partial<TCourse>) => {
   }
   const result = await Course.findById(id);
   return result;
+};
 
-  // update details data ------------
+// get single course with review from DB --------
+const getSingleCourseWithReviewFromDB = async (id: string) => {
+  const course = await Course.findById(id);
+  const reviews = await Review.find({ courseId: id });
+
+  return { course, reviews };
 };
 
 export const courseServices = {
   createCourseIntoDB,
   getAllCoursesFromDB,
   updateCourseIntoDB,
+  getSingleCourseWithReviewFromDB,
 };

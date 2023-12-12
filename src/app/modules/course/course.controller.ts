@@ -45,9 +45,20 @@ const getSingleCourseWithReview = catchAsync(async (req, res) => {
     data: result,
   });
 });
+// get best course based on average ---
+const getBestCourseBasedOnAverage = catchAsync(async (req, res) => {
+  const result = await courseServices.getBestCourseBasedOnAverageFromDB();
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Best course retrieved successfully',
+    data: result,
+  });
+});
 export const courseControllers = {
   createCourse,
   getAllCourses,
   updateCourse,
   getSingleCourseWithReview,
+  getBestCourseBasedOnAverage,
 };

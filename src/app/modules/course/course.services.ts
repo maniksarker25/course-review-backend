@@ -162,10 +162,31 @@ const updateCourseIntoDB = async (id: string, payload: Partial<TCourse>) => {
 
 // get single course with review from DB --------
 const getSingleCourseWithReviewFromDB = async (id: string) => {
-  const course = await Course.findById(id);
-  const reviews = await Review.find({ courseId: id });
+  const course = await Course.findById(id, { __v: 0 });
+  const reviews = await Review.find({ courseId: id }, { _id: 0, __v: 0 });
 
   return { course, reviews };
+};
+
+// get best course based on average rating from db-------
+const getBestCourseBasedOnAverageFromDB = async () => {
+  const bestReviewsCourse = await Review.aggregate([
+    {
+      $group: {
+        _id: '$courseId',
+        averageRating: { $avg: '$rating' },
+        reviewCount: { $sum: 1 },
+      },
+    },
+    { $sort: { averageRating: -1 } },
+    { $limit: 1 },
+  ]);
+  const bestCourse = await Course.findById(bestReviewsCourse[0]._id);
+  return {
+    course: bestCourse,
+    averageRating: bestReviewsCourse[0].averageRating,
+    reviewCount: bestReviewsCourse[0].reviewCount,
+  };
 };
 
 export const courseServices = {
@@ -173,4 +194,5 @@ export const courseServices = {
   getAllCoursesFromDB,
   updateCourseIntoDB,
   getSingleCourseWithReviewFromDB,
+  getBestCourseBasedOnAverageFromDB,
 };

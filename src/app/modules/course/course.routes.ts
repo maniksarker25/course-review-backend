@@ -21,4 +21,5 @@ router.get(
   '/courses/:courseId/reviews',
   courseControllers.getSingleCourseWithReview,
 );
+router.get('/course/best', courseControllers.getBestCourseBasedOnAverage);
 export const courseRoutes = router;

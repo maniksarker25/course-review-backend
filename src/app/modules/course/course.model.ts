@@ -75,12 +75,13 @@ const courseSchema = new Schema<TCourse>({
 });
 
 courseSchema.pre('save', async function (next) {
-  const startDate = new Date(this?.endDate).getDate();
-  const endDate = new Date(this?.startDate).getDate();
+  const startDate = new Date(this?.startDate).getTime();
+  const endDate = new Date(this?.endDate).getTime();
   // if (isNaN(startDate) && isNaN(endDate)) {
   //   throw new Error('Invalid date format in date');
   // }
   const duration = endDate - startDate;
+
   const durationInWeeks = duration / (7 * 24 * 60 * 60 * 1000);
   this.durationInWeeks = Math.ceil(durationInWeeks);
   next();

@@ -107,7 +107,7 @@ const updateCourseIntoDB = async (id: string, payload: Partial<TCourse>) => {
   if (payload?.durationInWeeks) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      'You can not update duration directly',
+      'You can not update durationInWeeks directly',
     );
   }
   // get primitive and non primitive data from payload----------

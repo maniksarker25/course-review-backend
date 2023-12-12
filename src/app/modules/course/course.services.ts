@@ -27,15 +27,11 @@ const getAllCoursesFromDB = async (query: Record<string, unknown>) => {
 
   const paginateQuery = Course.find().skip(skip);
 
-  const limitQuery = paginateQuery.limit(limit);
-
   // sorting ------------
   const sortOrder = query?.sortOrder || 'desc';
-  // const sortFields =
-  //   (query?.sortBy as string)?.split(',')?.join(' ') || '-title';
 
   const sortBy = (query?.sortBy as string)?.split(',') || ['__v'];
-  console.log(sortBy);
+  // console.log(sortBy);
   const sortOptions: Record<string, number> = {};
   if (sortBy.length > 1) {
     const sortByFields = sortBy?.map((field) => field.trim());
@@ -45,17 +41,60 @@ const getAllCoursesFromDB = async (query: Record<string, unknown>) => {
   }
   sortOptions[sortBy[0]] = sortOrder === 'desc' ? -1 : 1;
 
-  console.log(sortOptions);
+  // console.log(sortOptions);
 
-  const sortQuery = limitQuery.sort(sortOptions);
+  if (query?.sortBy || query?.sortOrder) {
+    paginateQuery.sort(sortOptions);
+  }
 
   // filter by minPrice and MaxPrice
-  const minPrice = query?.minPrice || 0;
-  const maxPrice = query?.maxPrice || Infinity;
-  const priceFilterQuery = await sortQuery.find({
-    price: { $gte: minPrice, $lte: maxPrice },
-  });
-  return priceFilterQuery;
+  const minPrice = parseFloat(query?.minPrice as string);
+  const maxPrice = parseFloat(query?.maxPrice as string);
+  if (minPrice && maxPrice) {
+    paginateQuery.where('price').gte(minPrice).lte(maxPrice);
+  }
+
+  // filter by tags --------
+  const tags = query?.tags;
+  if (tags) {
+    paginateQuery.find({ 'tags.name': tags });
+  }
+
+  // filter by start data end date range ---------
+  const startDate = query?.startDate;
+  const endDate = query?.endDate;
+  if (startDate && endDate) {
+    paginateQuery.find({
+      startDate: { $gte: startDate },
+      endDate: { $lte: endDate },
+    });
+  }
+
+  // filter by language---------
+  const language = query?.language;
+  if (language) {
+    paginateQuery.find({ language: language });
+  }
+
+  // provider --------
+  const provider = query?.provider;
+  if (provider) {
+    paginateQuery.find({ provider: provider });
+  }
+  // filter by duration weeeks
+  const durationInWeeks = Number(query?.durationInWeeks);
+  if (durationInWeeks) {
+    paginateQuery.find({ durationInWeeks: durationInWeeks });
+  }
+
+  // filter by level
+  const level = query?.level;
+  if (level) {
+    paginateQuery.find({ 'details.level': level });
+  }
+  const limitQuery = await paginateQuery.limit(limit);
+
+  return limitQuery;
 };
 
 export const courseServices = {

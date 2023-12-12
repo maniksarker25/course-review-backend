@@ -1,20 +1,6 @@
 import { ErrorRequestHandler } from 'express';
 import { ZodError } from 'zod';
 import AppError from '../error/appError';
-// basic error handling -----------------------------------
-// const globalErrorHandler: ErrorRequestHandler = (
-//   err,
-//   req,
-//   res,
-//   // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-//   next,
-// ) => {
-//   const statusCode = err.statusCode || 500;
-//   const message = 'Something went wrong';
-//   return res
-//     .status(statusCode)
-//     .json({ success: false, message: err.message || message, error: err });
-// };
 const globalErrorHandler: ErrorRequestHandler = (
   err,
   req,
@@ -48,7 +34,6 @@ const globalErrorHandler: ErrorRequestHandler = (
     };
   } else if (err instanceof AppError) {
     statusCode = err.statusCode;
-    message = 'Not Found Error';
     errorMessage = err.message;
   } else if (err?.name === 'CastError') {
     statusCode = 400;

@@ -104,10 +104,46 @@ const getAllCoursesFromDB = async (query: Record<string, unknown>) => {
 };
 
 const updateCourseIntoDB = async (id: string, payload: Partial<TCourse>) => {
-  const { tags, details, ...remainingData } = payload;
+  if (payload?.durationInWeeks) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      'You can not update duration directly',
+    );
+  }
+  // get primitive and non primitive data from payload----------
+  const { tags, details, startDate, endDate, ...remainingData } = payload;
   const modifiedDetailsAndRemainingData: Record<string, unknown> = {
     ...remainingData,
   };
+  // get  the existing course data
+  const existingCourse = await Course.findById(id);
+  if (!existingCourse) {
+    throw new AppError(404, 'Course not found');
+  }
+
+  const existingStartDate = existingCourse.startDate;
+  const existingEndDate = existingCourse.endDate;
+
+  let newStartDate = startDate || existingStartDate;
+  let newEndDate = endDate || existingEndDate;
+
+  if (startDate && endDate) {
+    newStartDate = startDate;
+    newEndDate = endDate;
+  } else if (startDate) {
+    newEndDate = existingEndDate;
+  } else if (endDate) {
+    newStartDate = existingStartDate;
+  }
+
+  const newDuration =
+    new Date(newEndDate).getTime() - new Date(newStartDate).getTime();
+  const newDurationInWeeks = newDuration / (7 * 24 * 60 * 60 * 1000);
+  modifiedDetailsAndRemainingData.startDate = newStartDate;
+  modifiedDetailsAndRemainingData.endDate = newEndDate;
+  modifiedDetailsAndRemainingData.durationInWeeks =
+    Math.ceil(newDurationInWeeks);
+
   // for details---------------
   if (details && Object.keys(details).length) {
     for (const [key, value] of Object.entries(details)) {
@@ -124,7 +160,7 @@ const updateCourseIntoDB = async (id: string, payload: Partial<TCourse>) => {
     },
   );
   if (!updateDetailsAndRemainingData) {
-    throw new Error('Failed to update course');
+    throw new AppError(httpStatus.BAD_REQUEST, 'Failed to update course');
   }
   // update tags data ------
   if (tags && tags?.length > 0) {
@@ -139,7 +175,7 @@ const updateCourseIntoDB = async (id: string, payload: Partial<TCourse>) => {
       { new: true, runValidators: true },
     );
     if (!deleteTags) {
-      throw new Error('Failed to update course');
+      throw new AppError(httpStatus.BAD_REQUEST, 'Failed to update course');
     }
 
     const newTags = tags.filter((tag) => tag.name && !tag.isDeleted);
@@ -153,7 +189,7 @@ const updateCourseIntoDB = async (id: string, payload: Partial<TCourse>) => {
       { new: true, runValidators: true },
     );
     if (!addNewTags) {
-      throw new Error('Failed to update course');
+      throw new AppError(httpStatus.BAD_REQUEST, 'Failed to update course');
     }
   }
   const result = await Course.findById(id);

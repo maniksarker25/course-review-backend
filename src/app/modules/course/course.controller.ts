@@ -23,7 +23,7 @@ const getAllCourses = catchAsync(async (req, res) => {
     data: result?.data,
   });
 });
-
+// update courses ----------------
 const updateCourse = catchAsync(async (req, res) => {
   const { courseId } = req.params;
   const result = await courseServices.updateCourseIntoDB(courseId, req.body);

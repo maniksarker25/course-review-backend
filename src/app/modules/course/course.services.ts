@@ -105,19 +105,19 @@ const getAllCoursesFromDB = async (query: Record<string, unknown>) => {
 
 const updateCourseIntoDB = async (id: string, payload: Partial<TCourse>) => {
   const { tags, details, ...remainingData } = payload;
-  const modifiedTagsAndRemainingData: Record<string, unknown> = {
+  const modifiedDetailsAndRemainingData: Record<string, unknown> = {
     ...remainingData,
   };
   // for details---------------
   if (details && Object.keys(details).length) {
     for (const [key, value] of Object.entries(details)) {
-      modifiedTagsAndRemainingData[`details.${key}`] = value;
+      modifiedDetailsAndRemainingData[`details.${key}`] = value;
     }
   }
   // update details and remaining data----------
   const updateDetailsAndRemainingData = await Course.findByIdAndUpdate(
     id,
-    modifiedTagsAndRemainingData,
+    modifiedDetailsAndRemainingData,
     {
       new: true,
       runValidators: true,

@@ -81,8 +81,8 @@ courseSchema.pre('save', async function (next) {
   if (isNaN(startDate) || isNaN(endDate)) {
     throw new Error('Invalid date format in date');
   }
-  const durationInMillisecond = endDate - startDate;
-  const durationInWeeks = durationInMillisecond / (7 * 24 * 60 * 60 * 1000);
+  const duration = endDate - startDate;
+  const durationInWeeks = duration / (7 * 24 * 60 * 60 * 1000);
   this.durationInWeeks = Math.ceil(durationInWeeks);
   next();
 });

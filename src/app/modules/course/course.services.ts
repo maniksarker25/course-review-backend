@@ -86,7 +86,7 @@ const getAllCoursesFromDB = async (query: Record<string, unknown>) => {
   if (provider) {
     paginateQuery.find({ provider: provider });
   }
-  // filter by duration weeeks
+  // filter by duration weeks ------------
   const duration = Number(query?.duration);
   if (duration) {
     paginateQuery.find({ durationInWeeks: duration });
